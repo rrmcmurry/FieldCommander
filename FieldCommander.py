@@ -2,10 +2,17 @@
 from PIL import Image, ImageTk
 from networktables import NetworkTables
 import json
+import ntcore
 
 # Initialize NetworkTables
-NetworkTables.initialize(server='roborio-9668-frc.local')  # Replace with your team number
-objective_table = NetworkTables.getTable('Objectives')
+
+ntinst = ntcore.NetworkTableInstance.getDefault()
+ntinst.startClient4("FieldCommander")
+ntinst.setServer("localhost")
+
+pose_table = ntinst.getTable("Pose")
+objective_table = ntinst.getTable("Objectives")
+
 
 # Tkinter window setup
 root = tk.Tk()
@@ -16,7 +23,7 @@ canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.pack()
 
 # Load field background image
-field_image = ImageTk.PhotoImage(file="field.png")  # Replace with your field image path
+field_image = ImageTk.PhotoImage(file="field.png")  
 canvas.create_image(0, 0, anchor=tk.NW, image=field_image)
 
 # Field dimensions (in feet)
@@ -30,7 +37,7 @@ scale_y = canvas_width / field_width    # Scale field width to canvas width
 # Load robot image
 robot_base_image = Image.open("robot.png")  # Replace with your robot image path
 robot_image = ImageTk.PhotoImage(robot_base_image)
-robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.SW)
+robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.CENTER)
 
 # List to store current objectives
 current_objectives = []
@@ -41,25 +48,30 @@ current_orientation = 0
 
 def update_robot_position():
     """Periodically update the robot's position and orientation on the canvas."""
-    robot_table = NetworkTables.getTable('RobotData')
-    field_x = robot_table.getNumber('x', 0)  # Field height (x -> canvas y)
-    field_y = robot_table.getNumber('y', 0)  # Field width (y -> canvas x)
-    z = robot_table.getNumber('z', current_orientation)  # Orientation (degrees)
+    field_x = pose_table.getNumber('X', 0)  # Field height (x -> canvas y)
+    field_y = pose_table.getNumber('Y', 0)  # Field width (y -> canvas x)
+    z = pose_table.getNumber('Z', current_orientation)  # Orientation (degrees)
+    # print(f"Position: ({field_x},{field_y},{z})")
 
     # Convert field coordinates to canvas coordinates
     canvas_x = field_y * scale_y  # Field width -> Canvas width
     canvas_y = canvas_height - (field_x * scale_x)  # Invert y-axis for canvas
 
-    # Update position
-    canvas.coords(robot_icon, canvas_x, canvas_y)
+    # Rotate the robot image around its center
+    rotated_image = robot_base_image.rotate(-z, expand=True, resample=Image.BICUBIC)
 
-    # Rotate robot image
-    rotated_image = robot_base_image.rotate(-z)  # Rotate counterclockwise
+    # Create a Tkinter-compatible image
     rotated_image_tk = ImageTk.PhotoImage(rotated_image)
+
+    # Center the rotated image on the canvas
+    canvas.coords(robot_icon, canvas_x, canvas_y)  # Move icon to the correct position
     canvas.itemconfig(robot_icon, image=rotated_image_tk)
     canvas.image = rotated_image_tk  # Keep a reference to avoid garbage collection
 
     root.after(100, update_robot_position)
+
+
+
 
 
 def set_target(event, overwrite=False):
