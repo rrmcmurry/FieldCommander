@@ -4,7 +4,7 @@ from networktables import NetworkTables
 import json
 
 # Initialize NetworkTables
-NetworkTables.initialize(server='9668')
+NetworkTables.initialize(server='9668')  # Replace with your team number
 objective_table = NetworkTables.getTable('Objectives')
 
 # Tkinter window setup
@@ -54,7 +54,7 @@ def update_robot_position():
     canvas.coords(robot_icon, canvas_x, canvas_y)
 
     # Rotate robot image
-    rotated_image = robot_base_image.rotate(z)  # Rotate counterclockwise
+    rotated_image = robot_base_image.rotate(-z)  # Rotate counterclockwise
     rotated_image_tk = ImageTk.PhotoImage(rotated_image)
     canvas.itemconfig(robot_icon, image=rotated_image_tk)
     canvas.image = rotated_image_tk  # Keep a reference to avoid garbage collection
@@ -62,18 +62,29 @@ def update_robot_position():
     root.after(100, update_robot_position)
 
 
-def set_target(event):
-    """Handle left-clicks to set navigation objectives."""
+def set_target(event, overwrite=False):
+    """Handle clicks to set navigation objectives."""
     global current_orientation
 
     # Translate canvas coordinates to field coordinates
     field_y = event.x / scale_y  # Canvas width -> Field width
     field_x = (canvas_height - event.y) / scale_x  # Canvas height -> Field height
 
-    # Add a navigation objective with the current orientation
+    # Create a navigation objective
     objective = {"action": "navigate", "target": [field_x, field_y], "orientation": current_orientation}
-    current_objectives.append(objective)
-    print(f"Added objective: {objective}")
+
+    if overwrite:
+        # Overwrite the entire objectives queue
+        current_objectives.clear()
+        current_objectives.append(objective)
+        print(f"Overwritten objectives with: {objective}")
+    else:
+        # Append to the objectives queue
+        current_objectives.append(objective)
+        print(f"Appended objective: {objective}")
+
+    # Upload objectives to NetworkTables
+    upload_objectives(overwrite)
 
 
 def change_orientation(event):
@@ -83,16 +94,16 @@ def change_orientation(event):
     if event.keysym == "Up":
         current_orientation = 0
     elif event.keysym == "Right":
-        current_orientation = 270
+        current_orientation = 90
     elif event.keysym == "Down":
         current_orientation = 180
     elif event.keysym == "Left":
-        current_orientation = 90
+        current_orientation = 270
 
     print(f"Orientation changed to: {current_orientation}°")
 
 
-def upload_objectives(overwrite=True):
+def upload_objectives(overwrite):
     """Upload the current objectives to NetworkTables."""
     if not current_objectives:
         print("No objectives to upload.")
@@ -106,30 +117,16 @@ def upload_objectives(overwrite=True):
     objective_table.putBoolean("Overwrite", overwrite)
     print(f"Uploaded objectives: {objectives_json} (Overwrite: {overwrite})")
 
-    # Clear local objectives if overwriting
-    if overwrite:
-        current_objectives.clear()
-
 
 # Bind mouse clicks to set navigation objectives
-canvas.bind("<Button-1>", set_target)  # Left-click to set target with current orientation
+canvas.bind("<Button-1>", lambda event: set_target(event, overwrite=True))  # Left-click to overwrite
+canvas.bind("<Button-3>", lambda event: set_target(event, overwrite=False)) # Right-click to append
 
 # Bind arrow keys for orientation adjustment
 root.bind("<Up>", change_orientation)
 root.bind("<Right>", change_orientation)
 root.bind("<Down>", change_orientation)
 root.bind("<Left>", change_orientation)
-
-# Add buttons for functionality
-button_frame = tk.Frame(root)
-button_frame.pack()
-
-# Button to upload objectives
-upload_button = tk.Button(button_frame, text="Upload Objectives (Overwrite)", command=lambda: upload_objectives(True))
-upload_button.pack(side=tk.LEFT)
-
-append_button = tk.Button(button_frame, text="Append Objectives", command=lambda: upload_objectives(False))
-append_button.pack(side=tk.LEFT)
 
 # Start tracking robot position
 update_robot_position()
