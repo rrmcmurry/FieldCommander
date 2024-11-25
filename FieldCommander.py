@@ -58,7 +58,7 @@ def update_robot_position():
     canvas_y = canvas_height - (field_x * scale_x)  # Invert y-axis for canvas
 
     # Rotate the robot image around its center
-    rotated_image = robot_base_image.rotate(-z, expand=True, resample=Image.BICUBIC)
+    rotated_image = robot_base_image.rotate(z, expand=True, resample=Image.BICUBIC)
 
     # Create a Tkinter-compatible image
     rotated_image_tk = ImageTk.PhotoImage(rotated_image)
@@ -74,7 +74,7 @@ def update_robot_position():
 
 
 
-def set_target(event, overwrite=False):
+def set_target(event, overwrite):
     """Handle clicks to set navigation objectives."""
     global current_orientation
 
@@ -84,17 +84,10 @@ def set_target(event, overwrite=False):
 
     # Create a navigation objective
     objective = {"action": "navigate", "target": [field_x, field_y], "orientation": current_orientation}
-
-    if overwrite:
-        # Overwrite the entire objectives queue
-        current_objectives.clear()
-        current_objectives.append(objective)
-        print(f"Overwritten objectives with: {objective}")
-    else:
-        # Append to the objectives queue
-        current_objectives.append(objective)
-        print(f"Appended objective: {objective}")
-
+    current_objectives.clear()
+    current_objectives.append(objective)
+    
+    
     # Upload objectives to NetworkTables
     upload_objectives(overwrite)
 
@@ -106,11 +99,11 @@ def change_orientation(event):
     if event.keysym == "Up":
         current_orientation = 0
     elif event.keysym == "Right":
-        current_orientation = 90
+        current_orientation = 270
     elif event.keysym == "Down":
         current_orientation = 180
     elif event.keysym == "Left":
-        current_orientation = 270
+        current_orientation = 90
 
     print(f"Orientation changed to: {current_orientation}°")
 
@@ -127,7 +120,7 @@ def upload_objectives(overwrite):
     # Send to NetworkTables
     objective_table.putString("NewObjectives", objectives_json)
     objective_table.putBoolean("Overwrite", overwrite)
-    print(f"Uploaded objectives: {objectives_json} (Overwrite: {overwrite})")
+    print(f"Objectives: {objectives_json} (Overwrite: {overwrite})")
 
 
 # Bind mouse clicks to set navigation objectives
