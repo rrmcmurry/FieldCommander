@@ -30,9 +30,11 @@
 
 3. Setup NetworkTables:
 
-   Confirm your NetworkTables server is running on the robot or Raspberry Pi.  
+   Confirm your NetworkTables server is running on the robot.
+   Push your X and Y coordinates and Z Orientation to a NetworkTables Table named "Pose"
+   Note that X is forward, Y is right positive, and Z is 0 forward, counterclockwise positive... (for reasons).
    Update the `NetworkTables.initialize()` line in the script with the correct IP or hostname:  
-   NetworkTables.initialize(server='roborio-TEAM-frc.local')  # Replace TEAM with your team number
+   NetworkTables.initialize(server='roborio-9668-frc.local')  # Replace TEAM with your team number
 
 4. Run the application:
 
@@ -79,11 +81,6 @@ Planned enhancements include:
 
 ---
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
 
 ## Acknowledgments
 

@@ -4,7 +4,7 @@ from networktables import NetworkTables
 import json
 
 # Initialize NetworkTables
-NetworkTables.initialize(server='9668')  # Replace with your team number
+NetworkTables.initialize(server='roborio-9668-frc.local')  # Replace with your team number
 objective_table = NetworkTables.getTable('Objectives')
 
 # Tkinter window setup
