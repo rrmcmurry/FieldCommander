@@ -3,6 +3,10 @@ from PIL import Image, ImageTk
 from networktables import NetworkTables
 import json
 import ntcore
+import time
+from PathDrawer import PathDrawer
+
+
 
 # Initialize NetworkTables
 
@@ -12,7 +16,7 @@ ntinst.setServer("localhost")
 
 pose_table = ntinst.getTable("Pose")
 objective_table = ntinst.getTable("Objectives")
-
+path_drawer = PathDrawer(update_interval=0.1)
 
 # Tkinter window setup
 root = tk.Tk()
@@ -122,10 +126,76 @@ def upload_objectives(overwrite):
     objective_table.putBoolean("Overwrite", overwrite)
     print(f"Objectives: {objectives_json} (Overwrite: {overwrite})")
 
+def send_passthrough_command(path):
+    """Send the completed path as a passthrough action."""
+    # Simplify the path to reduce the number of points
+    lengthofpath = len(path)
+    
+    lastpoint = path[-1]
+    simplified_path = path[::2]  # Sample every 2nd point
+    if len(path) < 5:
+        objective = [{
+            "action": "navigate",
+            "target": [lastpoint[0], lastpoint[1]],
+            "orientation": current_orientation
+        }]
+    else:
+        objective = [{
+            "action": "passthrough",
+            "path": simplified_path
+        },
+        {
+            "action": "navigate",
+            "target": [lastpoint[0], lastpoint[1]],
+            "orientation": current_orientation
+        },
+        {
+            "action": "stop"
+        }]
+    # Convert to JSON and send to NetworkTables
+    objectives_json = json.dumps(objective)
+    objective_table.putString("NewObjectives", objectives_json)
+    objective_table.putBoolean("Overwrite", True)
+    print(f"Sent: {objectives_json}")
+    
+
+
+def on_mouse_press(event):
+    """Start drawing the path on left mouse button press."""
+    field_y = event.x / scale_y
+    field_x = (canvas_height - event.y) / scale_x
+    path_drawer.start_drawing((field_x, field_y))
+
+def on_mouse_drag(event):
+    """Update the path as the mouse moves."""
+    field_y = event.x / scale_y
+    field_x = (canvas_height - event.y) / scale_x
+    path_drawer.update_path((field_x, field_y))
+    draw_path(path_drawer.path)  # Visualize the path
+
+def on_mouse_release(event):
+    """Send the completed path as a passthrough action."""
+    completed_path = path_drawer.stop_drawing()
+    if completed_path:
+        send_passthrough_command(completed_path)
+        canvas.delete("path")  # Clear the drawn path
+
+def draw_path(path):
+    """Draw the path on the canvas."""
+    canvas.delete("path")  # Remove old path
+    for i in range(len(path) - 1):
+        x1, y1 = path[i][1] * scale_y, canvas_height - (path[i][0] * scale_x)
+        x2, y2 = path[i + 1][1] * scale_y, canvas_height - (path[i + 1][0] * scale_x)
+        canvas.create_line(x1, y1, x2, y2, fill="blue", width=2, tags="path")
+
 
 # Bind mouse clicks to set navigation objectives
-canvas.bind("<Button-1>", lambda event: set_target(event, overwrite=True))  # Left-click to overwrite
-canvas.bind("<Button-3>", lambda event: set_target(event, overwrite=False)) # Right-click to append
+canvas.bind("<Button-1>", on_mouse_press)  # Start drawing
+canvas.bind("<B1-Motion>", on_mouse_drag)  # Continue drawing
+canvas.bind("<ButtonRelease-1>", on_mouse_release)  # Finalize and send
+
+
+
 
 # Bind arrow keys for orientation adjustment
 root.bind("<Up>", change_orientation)
