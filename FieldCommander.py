@@ -21,7 +21,7 @@ path_drawer = PathDrawer(update_interval=0.1)
 root = tk.Tk()
 root.title("FieldCommander")
 canvas_width = 500
-canvas_height = 1000
+canvas_height = 800
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.pack()
 
