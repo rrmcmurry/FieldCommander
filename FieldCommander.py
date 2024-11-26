@@ -6,9 +6,11 @@ import time
 from PathDrawer import PathDrawer
 
 
+redteam=False
+fieldorientation = 180 if redteam else 0
+robotimage = "robotred.png" if redteam else "robotblue.png"
 
 # Initialize NetworkTables
-
 ntinst = ntcore.NetworkTableInstance.getDefault()
 ntinst.startClient4("FieldCommander")
 ntinst.setServer("localhost")
@@ -26,7 +28,9 @@ canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.pack()
 
 # Load field background image
-field_image = ImageTk.PhotoImage(file="field.png")  
+
+field_base_image = Image.open("field.png").rotate(fieldorientation, expand=False, resample=Image.BICUBIC)
+field_image = ImageTk.PhotoImage(field_base_image)  
 canvas.create_image(0, 0, anchor=tk.NW, image=field_image)
 
 # Field dimensions (in feet)
@@ -38,7 +42,7 @@ scale_x = canvas_height / field_height  # Scale field height to canvas height
 scale_y = canvas_width / field_width    # Scale field width to canvas width
 
 # Load robot image
-robot_base_image = Image.open("robot.png")  # Replace with your robot image path
+robot_base_image = Image.open(robotimage)  # Replace with your robot image path
 robot_image = ImageTk.PhotoImage(robot_base_image)
 robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.CENTER)
 
