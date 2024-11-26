@@ -1,6 +1,5 @@
 ﻿import tkinter as tk
 from PIL import Image, ImageTk
-from networktables import NetworkTables
 import json
 import ntcore
 import time
