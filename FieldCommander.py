@@ -9,6 +9,7 @@ from PathDrawer import PathDrawer
 redteam=False
 fieldorientation = 180 if redteam else 0
 robotimage = "robotred.png" if redteam else "robotblue.png"
+fieldimage = "field-red.png" if redteam else "field-blue.png"
 
 # Initialize NetworkTables
 ntinst = ntcore.NetworkTableInstance.getDefault()
@@ -22,14 +23,13 @@ path_drawer = PathDrawer(update_interval=0.1)
 # Tkinter window setup
 root = tk.Tk()
 root.title("FieldCommander")
-canvas_width = 500
-canvas_height = 800
+canvas_width = 1439
+canvas_height = 1050
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.pack()
 
 # Load field background image
-
-field_base_image = Image.open("field.png").rotate(fieldorientation, expand=False, resample=Image.BICUBIC)
+field_base_image = Image.open(fieldimage)
 field_image = ImageTk.PhotoImage(field_base_image)  
 canvas.create_image(0, 0, anchor=tk.NW, image=field_image)
 
