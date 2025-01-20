@@ -2,7 +2,6 @@
 from PIL import Image, ImageTk
 import json
 import ntcore
-import time
 from PathDrawer import PathDrawer
 
 
@@ -44,6 +43,122 @@ scale_y = canvas_width / field_width    # Scale field width to canvas width
 robot_base_image = Image.open(robotimage)  # Replace with your robot image path
 robot_image = ImageTk.PhotoImage(robot_base_image)
 robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.CENTER)
+
+clickable_areas = {
+    "barge":{
+        "coords": [0, 0, 959, 0, 959, 176, 0, 176],
+        "action": "select_barge",
+        "apriltag": [ 14, 5]
+    },
+    "processor":{
+        "coords": [829, 177, 959, 177, 959, 400, 829, 400],
+        "action": "select_processor",
+        "apriltag": [ 16, 3]
+    },
+    "reef2oclock":{
+        "coords": [449, 508, 515, 398, 578, 508],
+        "action": "select_reef",
+        "apriltag": [ 22, 9]        
+    },
+    "reef4oclock":{
+        "coords": [449, 508, 578, 508, 515, 623],
+        "action": "select_reef",
+        "apriltag": [ 17, 8]            
+    },
+    "reef6oclock":{
+        "coords": [449, 508, 515, 623, 383, 623],
+        "action": "select_reef",
+        "apriltag": [ 18, 7]            
+    },    
+    "reef8oclock":{
+        "coords": [449, 508, 383, 623, 318, 508],
+        "action": "select_reef",
+        "apriltag": [ 19, 6]            
+    },
+    "reef10oclock":{
+        "coords": [449, 508, 318, 508, 382, 398],
+        "action": "select_reef",
+        "apriltag": [ 20, 11]            
+    },
+    "reef12oclock":{
+        "coords": [449, 508, 382, 398, 515, 398],
+        "action": "select_reef",
+        "apriltag": [ 21, 10]            
+    },
+    "corallevel4left":{
+        "coords": [959, 0, 1193, 0, 1193, 234, 959, 234],
+        "action": "select_coral_level",
+        "level": 4,
+        "side": "left"
+    },
+    "corallevel4right":{
+        "coords": [1193, 0, 1440, 0, 1440, 234, 1193, 234],
+        "action": "select_coral_level",
+        "level": 4,
+        "side": "right"
+    },
+    "corallevel3left":{
+        "coords": [959, 234, 1132, 234, 1132, 460, 959, 460],
+        "action": "select_coral_level",
+        "level": 3,
+        "side": "left"
+    },
+    "corallevel3right":{
+        "coords": [1260, 234, 1440, 234, 1440, 460, 1260, 460],
+        "action": "select_coral_level",
+        "level": 3,
+        "side": "right"
+    },
+    "corallevel2left":{
+        "coords": [959, 460, 1132, 460, 1132, 622, 959, 622],
+        "action": "select_coral_level",
+        "level": 2,
+        "side": "left"
+    },
+    "corallevel2right":{
+        "coords": [1260, 460, 1440, 460, 1440, 622, 1260, 622],
+        "action": "select_coral_level",
+        "level": 2,
+        "side": "right"
+    },
+    "corallevel1":{
+        "coords": [959, 622, 1440, 622, 1440, 720, 959, 720],
+        "action": "select_coral_level",
+        "level": 1,
+        "side": "left"
+    },
+    "algaelevel3":{
+        "coords": [1132, 234, 1260, 234, 1260, 414, 1132, 414],
+        "action": "select_algae_level",
+        "level": 3        
+    },
+    "algaelevel2":{
+        "coords": [1132, 414, 1260, 414, 1260, 622, 1132, 622],
+        "action": "select_algae_level",
+        "level": 2        
+    },
+    "coralstationleft":{
+        "coords": [0, 782, 55, 782, 183, 953, 183, 1050, 0, 1050],
+        "action": "select_coralstation",
+        "side": "left",
+        "apriltag": [ 13, 1]            
+    },
+    "coralstationright":{
+        "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
+        "action": "select_coralstation",
+        "side": "right",
+        "apriltag": [ 12, 2]            
+    },
+    "clearbutton":{
+        "coords": [959, 967, 1440, 967, 1440, 1050, 959, 1050],
+        "action": "clearobjectives"
+    }
+
+}
+
+
+
+
 
 # List to store current objectives
 current_objectives = []
@@ -160,28 +275,71 @@ def send_passthrough_command(path):
     objective_table.putBoolean("Overwrite", True)
     print(f"Sent: {objectives_json}")
     
+def is_point_in_polygon(x, y, polygon_coords):
+    n = len(polygon_coords) // 2
+    inside = False    
+    p1x, p1y = polygon_coords[0], polygon_coords[1]
+    for i in range(n):
+        p2x, p2y = polygon_coords[2 * (i + 1) % (n*2)], polygon_coords[2 * (i + 1) % (n*2) + 1]
+        if y > min(p1y, p2y):
+            if y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        x_inters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1y == p2y or x <= x_inters:
+                        inside = not inside
+        p1x, p1y, = p2x, p2y
+    return inside
+
+def buttonpressed(name):
+    button = clickable_areas.get(name)
+    action = button.get("action")
+    team = 1 if redteam else 0
+
+    if action == "select_barge":
+        print("navigate to barge")
+        apriltagID = button.get("apriltag")[team]
+        print(f"AprilTag: {apriltagID}")  
+        print("endgame")
+    elif action == "select_processor": 
+        apriltagID = button.get("apriltag")[team]
+        print(f"AprilTag: {apriltagID}")       
+        print("navigate to processor")
+        print("algaeoutput")
+    elif action == "select_coralstation":
+        side = button.get("side")
+        print(f"navigate to {side} coralstation")
+        apriltagID = button.get("apriltag")[team]
+        print(f"AprilTag: {apriltagID}")  
+    elif action == "select_reef":       
+        print(f"Navigate to reef {name}")
+        apriltagID = button.get("apriltag")[team]
+        print(f"AprilTag: {apriltagID}")  
+    elif action == "select_coral_level":
+        level = button.get("level")
+        side = button.get("side")
+        print(f"Update - Set elevator to level {level} and aim for {side} side")
+    elif action == "select_algae_level":
+        level = button.get("level")
+        print(f"Update command - Set elevator to level {level} and engage algae intake")
+    elif action == "clearobjectives":
+        print("Clear objectives")
+    
+
 
 
 def on_mouse_press(event):
-
-    widget = event.widget
     x, y = event.x, event.y
-    item = widget.find_closest(event.x, event.y)
-    tags = widget.gettags(item)
+    for name, area in clickable_areas.items():
+        if is_point_in_polygon(x, y, area["coords"]):
+            # print(f"{name} clicked!")            
+            buttonpressed(name)
+            return
 
-    coral_box = canvas.bbox("coral_button")
-    algae_box = canvas.bbox("algae_button")
-
-    if coral_box[0] <= x <= coral_box[2] and coral_box[1] <= y <= coral_box[3]:
-        print("Coral button clicked")
-    elif algae_box[0] <= x <= algae_box[2] and algae_box[1] <= y <= algae_box[3]:
-        print("Algae button clicked")
-    else:
-
-        """Start drawing the path on left mouse button press."""
-        field_y = event.x / scale_y
-        field_x = (canvas_height - event.y) / scale_x
-        path_drawer.start_drawing((field_x, field_y))
+    """Start drawing the path on left mouse button press."""
+    field_y = event.x / scale_y
+    field_x = (canvas_height - event.y) / scale_x
+    path_drawer.start_drawing((field_x, field_y))
 
 def on_mouse_drag(event):
     """Update the path as the mouse moves."""
@@ -208,8 +366,8 @@ def draw_path(path):
 
 
 # Define clickable areas (e.g. coral, algae, reef segments, levels)
-canvas.create_rectangle(959, 730, 1439, 837, fill="", tags="coral_button")
-canvas.create_rectangle(959, 838, 1439, 1050, fill="", tags="algae_button")
+for name, area in clickable_areas.items():
+    canvas.create_polygon(area["coords"], fill="", outline="blue", tags=(name, "clickable"))
 
 
 # Bind mouse clicks to set navigation objectives
