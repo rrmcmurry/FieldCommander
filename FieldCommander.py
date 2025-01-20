@@ -7,7 +7,6 @@ from PathDrawer import PathDrawer
 
 
 redteam=False
-fieldorientation = 180 if redteam else 0
 robotimage = "robotred.png" if redteam else "robotblue.png"
 fieldimage = "field-red.png" if redteam else "field-blue.png"
 
@@ -164,10 +163,25 @@ def send_passthrough_command(path):
 
 
 def on_mouse_press(event):
-    """Start drawing the path on left mouse button press."""
-    field_y = event.x / scale_y
-    field_x = (canvas_height - event.y) / scale_x
-    path_drawer.start_drawing((field_x, field_y))
+
+    widget = event.widget
+    x, y = event.x, event.y
+    item = widget.find_closest(event.x, event.y)
+    tags = widget.gettags(item)
+
+    coral_box = canvas.bbox("coral_button")
+    algae_box = canvas.bbox("algae_button")
+
+    if coral_box[0] <= x <= coral_box[2] and coral_box[1] <= y <= coral_box[3]:
+        print("Coral button clicked")
+    elif algae_box[0] <= x <= algae_box[2] and algae_box[1] <= y <= algae_box[3]:
+        print("Algae button clicked")
+    else:
+
+        """Start drawing the path on left mouse button press."""
+        field_y = event.x / scale_y
+        field_x = (canvas_height - event.y) / scale_x
+        path_drawer.start_drawing((field_x, field_y))
 
 def on_mouse_drag(event):
     """Update the path as the mouse moves."""
@@ -190,6 +204,12 @@ def draw_path(path):
         x1, y1 = path[i][1] * scale_y, canvas_height - (path[i][0] * scale_x)
         x2, y2 = path[i + 1][1] * scale_y, canvas_height - (path[i + 1][0] * scale_x)
         canvas.create_line(x1, y1, x2, y2, fill="blue", width=2, tags="path")
+
+
+
+# Define clickable areas (e.g. coral, algae, reef segments, levels)
+canvas.create_rectangle(959, 730, 1439, 837, fill="", tags="coral_button")
+canvas.create_rectangle(959, 838, 1439, 1050, fill="", tags="algae_button")
 
 
 # Bind mouse clicks to set navigation objectives
