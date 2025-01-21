@@ -1,11 +1,13 @@
 ﻿import tkinter as tk
 from PIL import Image, ImageTk
+import os
+import sys
 import json
 import ntcore
 from PathDrawer import PathDrawer
 from UserInterface import buttons
 
-
+os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 # Initialize NetworkTables
 ntinst = ntcore.NetworkTableInstance.getDefault()
 ntinst.startClient4("FieldCommander")
