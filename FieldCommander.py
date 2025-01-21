@@ -28,7 +28,7 @@ path_drawer = PathDrawer(update_interval=0.1)
 
 # Tkinter window setup
 root = tk.Tk()
-root.title("FieldCommander")
+root.title("Reefscape Field Commander")
 canvas_width = 1439
 canvas_height = 1050
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
@@ -38,6 +38,21 @@ canvas.pack()
 field_base_image = Image.open(fieldimage)
 field_image = ImageTk.PhotoImage(field_base_image)  
 canvas.create_image(0, 0, anchor=tk.NW, image=field_image)
+
+# Add text overlay to list objectives
+# Create a text item for objectives in the lower right corner
+objectives_display = canvas.create_text(
+    canvas_width - 470, canvas_height - 310,  # Adjust position as needed
+    anchor=tk.NW,  # Southeast anchor aligns the text to the bottom-right corner
+    text="No objectives set.", fill="white", font=("Arial", 10), justify=tk.LEFT
+)
+elevator_display = canvas.create_text(
+    canvas_width - 470, canvas_height - 210,  # Adjust position as needed
+    anchor=tk.NW,  # Southeast anchor aligns the text to the bottom-right corner
+    text="No level set.", fill="white", font=("Arial", 10), justify=tk.LEFT
+)
+canvas.itemconfigure(objectives_display, width=450)
+canvas.itemconfigure(elevator_display, width=450)
 
 # Field dimensions (in feet)
 field_width = 26.5  # 786 pixels
@@ -52,13 +67,10 @@ robot_base_image = Image.open(robotimage)  # Replace with your robot image path
 robot_image = ImageTk.PhotoImage(robot_base_image)
 robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.CENTER)
 
-# List to store current objectives
-current_objectives = []
-
 # Variable to store current orientation (default to 0°)
 current_orientation = 0
 
-
+# Update position of robot image on canvas
 def update_robot_position():
     """Periodically update the robot's position and orientation on the canvas."""
     field_x = pose_table.getNumber('X', 0)  # Field height (x -> canvas y)
@@ -84,70 +96,30 @@ def update_robot_position():
     root.after(100, update_robot_position)
 
 
+# Update objectives list 
+def update_objectives_display(objectives_text):    
+    canvas.itemconfig(objectives_display, text=objectives_text)
 
+# Update elevator display
+def update_elevator_display(level_text):    
+    canvas.itemconfig(elevator_display, text=level_text)
 
-
-def set_target(event, overwrite):
-    """Handle clicks to set navigation objectives."""
-    global current_orientation
-
-    # Translate canvas coordinates to field coordinates
-    field_y = event.x / scale_y  # Canvas width -> Field width
-    field_x = (canvas_height - event.y) / scale_x  # Canvas height -> Field height
-
-    # Create a navigation objective
-    objective = {"action": "navigate", "target": [field_x, field_y], "orientation": current_orientation}
-    current_objectives.clear()
-    current_objectives.append(objective)
-    
-    
-    # Upload objectives to NetworkTables
-    upload_objectives(overwrite)
-
-
-def change_orientation(event):
-    """Handle keyboard arrow keys to change the robot's orientation."""
-    global current_orientation
-
-    if event.keysym == "Up":
-        current_orientation = 0
-    elif event.keysym == "Right":
-        current_orientation = 270
-    elif event.keysym == "Down":
-        current_orientation = 180
-    elif event.keysym == "Left":
-        current_orientation = 90
-
-    print(f"Orientation changed to: {current_orientation}°")
-
-
-def upload_objectives(overwrite):
-    """Upload the current objectives to NetworkTables."""
-    if not current_objectives:
-        print("No objectives to upload.")
-        return
-
-    # Convert objectives to JSON
-    objectives_json = json.dumps(current_objectives)
-
-    # Send to NetworkTables
-    objective_table.putString("NewObjectives", objectives_json)
-    objective_table.putBoolean("Overwrite", overwrite)
-    print(f"Objectives: {objectives_json} (Overwrite: {overwrite})")
-
+# Send Navigation Command
 def send_passthrough_command(path):
     """Send the completed path as a passthrough action."""
     # Simplify the path to reduce the number of points
-    lengthofpath = len(path)
-    
     lastpoint = path[-1]
     simplified_path = path[::2]  # Sample every 2nd point
+ 
+    # If Path is less than five points, just navigate directly
     if len(path) < 5:
         objective = [{
             "action": "navigate",
             "target": [lastpoint[0], lastpoint[1]],
             "orientation": current_orientation
         }]
+    
+    # Otherwise, send a passthrough path
     else:
         objective = [{
             "action": "passthrough",
@@ -161,12 +133,17 @@ def send_passthrough_command(path):
         {
             "action": "stop"
         }]
+    
     # Convert to JSON and send to NetworkTables
     objectives_json = json.dumps(objective)
     objective_table.putString("NewObjectives", objectives_json)
     objective_table.putBoolean("Overwrite", True)
+    update_objectives_display(f"{objectives_json}")
     print(f"Sent: {objectives_json}")
-    
+
+
+
+# Check whether a point is within a polygon
 def is_point_in_polygon(x, y, polygon_coords):
     n = len(polygon_coords) // 2
     inside = False    
@@ -183,42 +160,43 @@ def is_point_in_polygon(x, y, polygon_coords):
         p1x, p1y, = p2x, p2y
     return inside
 
+
+# Button actions
 def buttonpressed(name):
     button = buttons.get(name)
     action = button.get("action")
     team = 1 if redteam else 0
 
-    if action == "select_barge":
-        print("navigate to barge")
+    if action == "select_barge":        
         apriltagID = button.get("apriltag")[team]
-        print(f"AprilTag: {apriltagID}")  
-        print("endgame")
+        update_objectives_display(f"Navigate to Barge\nAprilTag: {apriltagID}")      
+        update_elevator_display("Set elevator to Endgame level")     
     elif action == "select_processor": 
         apriltagID = button.get("apriltag")[team]
-        print(f"AprilTag: {apriltagID}")       
-        print("navigate to processor")
-        print("algaeoutput")
+        update_objectives_display(f"Navigate to Processor\nAprilTag: {apriltagID}") 
+        update_elevator_display("Set elevator to Processor level")          
     elif action == "select_coralstation":
-        side = button.get("side")
-        print(f"navigate to {side} coralstation")
+        side = button.get("side")        
         apriltagID = button.get("apriltag")[team]
-        print(f"AprilTag: {apriltagID}")  
-    elif action == "select_reef":       
-        print(f"Navigate to reef {name}")
+        update_objectives_display(f"Navigate to {side} side Coral Station\nAprilTag: {apriltagID}")   
+        update_elevator_display("Set elevator to Coral Station level")
+    elif action == "select_reef":               
         apriltagID = button.get("apriltag")[team]
-        print(f"AprilTag: {apriltagID}")  
+        update_objectives_display(f"Navigate to {name}\nAprilTag: {apriltagID}")   
     elif action == "select_coral_level":
         level = button.get("level")
         side = button.get("side")
-        print(f"Update - Set elevator to level {level} and aim for {side} side")
+        if level > 1:
+            update_elevator_display(f"Set elevator to level {level} and aim for {side} side")
+        else:
+            update_elevator_display(f"Set elevator to level {level}")
     elif action == "select_algae_level":
         level = button.get("level")
-        print(f"Update - Set elevator to level {level} and engage algae intake")
+        update_elevator_display(f"Set elevator to level {level} and engage algae intake")
     elif action == "clearobjectives":
-        print("Clear objectives")
+        update_objectives_display("")
+        update_elevator_display("")
     
-
-
 
 def on_mouse_press(event):
     x, y = event.x, event.y
@@ -270,14 +248,6 @@ canvas.bind("<Button-1>", on_mouse_press)  # Start drawing
 canvas.bind("<B1-Motion>", on_mouse_drag)  # Continue drawing
 canvas.bind("<ButtonRelease-1>", on_mouse_release)  # Finalize and send
 
-
-
-
-# Bind arrow keys for orientation adjustment
-root.bind("<Up>", change_orientation)
-root.bind("<Right>", change_orientation)
-root.bind("<Down>", change_orientation)
-root.bind("<Left>", change_orientation)
 
 # Start tracking robot position
 update_robot_position()
