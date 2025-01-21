@@ -3,19 +3,27 @@ from PIL import Image, ImageTk
 import json
 import ntcore
 from PathDrawer import PathDrawer
+from UserInterface import buttons
 
-
-redteam=False
-robotimage = "robotred.png" if redteam else "robotblue.png"
-fieldimage = "field-red.png" if redteam else "field-blue.png"
 
 # Initialize NetworkTables
 ntinst = ntcore.NetworkTableInstance.getDefault()
 ntinst.startClient4("FieldCommander")
 ntinst.setServer("localhost")
-
+ntinst.startDSClient()
 pose_table = ntinst.getTable("Pose")
 objective_table = ntinst.getTable("Objectives")
+FMSInfo_table = ntinst.getTable("FMSInfo")
+
+# Fetch team color from FMSInfo NetworkTable, default to BlueTeam  
+# (This is untested and needs to be updated when we have driver station handy)
+# Ideally, we can get station number at this point too... to set a starting location
+redteam = FMSInfo_table.getBoolean("redteam",False) 
+
+robotimage = "Images/robotred.png" if redteam else "Images/robotblue.png"
+fieldimage = "Images/field-red.png" if redteam else "Images/field-blue.png"
+
+# Initialize PathDrawer
 path_drawer = PathDrawer(update_interval=0.1)
 
 # Tkinter window setup
@@ -32,133 +40,17 @@ field_image = ImageTk.PhotoImage(field_base_image)
 canvas.create_image(0, 0, anchor=tk.NW, image=field_image)
 
 # Field dimensions (in feet)
-field_width = 10
-field_height = 20
+field_width = 26.5  # 786 pixels
+field_height = 29.5 # 800 pixels
 
 # Scaling factors
-scale_x = canvas_height / field_height  # Scale field height to canvas height
-scale_y = canvas_width / field_width    # Scale field width to canvas width
+scale_x = 800 / field_height  # Scale field height to canvas height
+scale_y = 786 / field_width    # Scale field width to canvas width
 
 # Load robot image
 robot_base_image = Image.open(robotimage)  # Replace with your robot image path
 robot_image = ImageTk.PhotoImage(robot_base_image)
 robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.CENTER)
-
-clickable_areas = {
-    "barge":{
-        "coords": [0, 0, 959, 0, 959, 176, 0, 176],
-        "action": "select_barge",
-        "apriltag": [ 14, 5]
-    },
-    "processor":{
-        "coords": [829, 177, 959, 177, 959, 400, 829, 400],
-        "action": "select_processor",
-        "apriltag": [ 16, 3]
-    },
-    "reef2oclock":{
-        "coords": [449, 508, 515, 398, 578, 508],
-        "action": "select_reef",
-        "apriltag": [ 22, 9]        
-    },
-    "reef4oclock":{
-        "coords": [449, 508, 578, 508, 515, 623],
-        "action": "select_reef",
-        "apriltag": [ 17, 8]            
-    },
-    "reef6oclock":{
-        "coords": [449, 508, 515, 623, 383, 623],
-        "action": "select_reef",
-        "apriltag": [ 18, 7]            
-    },    
-    "reef8oclock":{
-        "coords": [449, 508, 383, 623, 318, 508],
-        "action": "select_reef",
-        "apriltag": [ 19, 6]            
-    },
-    "reef10oclock":{
-        "coords": [449, 508, 318, 508, 382, 398],
-        "action": "select_reef",
-        "apriltag": [ 20, 11]            
-    },
-    "reef12oclock":{
-        "coords": [449, 508, 382, 398, 515, 398],
-        "action": "select_reef",
-        "apriltag": [ 21, 10]            
-    },
-    "corallevel4left":{
-        "coords": [959, 0, 1193, 0, 1193, 234, 959, 234],
-        "action": "select_coral_level",
-        "level": 4,
-        "side": "left"
-    },
-    "corallevel4right":{
-        "coords": [1193, 0, 1440, 0, 1440, 234, 1193, 234],
-        "action": "select_coral_level",
-        "level": 4,
-        "side": "right"
-    },
-    "corallevel3left":{
-        "coords": [959, 234, 1132, 234, 1132, 460, 959, 460],
-        "action": "select_coral_level",
-        "level": 3,
-        "side": "left"
-    },
-    "corallevel3right":{
-        "coords": [1260, 234, 1440, 234, 1440, 460, 1260, 460],
-        "action": "select_coral_level",
-        "level": 3,
-        "side": "right"
-    },
-    "corallevel2left":{
-        "coords": [959, 460, 1132, 460, 1132, 622, 959, 622],
-        "action": "select_coral_level",
-        "level": 2,
-        "side": "left"
-    },
-    "corallevel2right":{
-        "coords": [1260, 460, 1440, 460, 1440, 622, 1260, 622],
-        "action": "select_coral_level",
-        "level": 2,
-        "side": "right"
-    },
-    "corallevel1":{
-        "coords": [959, 622, 1440, 622, 1440, 720, 959, 720],
-        "action": "select_coral_level",
-        "level": 1,
-        "side": "left"
-    },
-    "algaelevel3":{
-        "coords": [1132, 234, 1260, 234, 1260, 414, 1132, 414],
-        "action": "select_algae_level",
-        "level": 3        
-    },
-    "algaelevel2":{
-        "coords": [1132, 414, 1260, 414, 1260, 622, 1132, 622],
-        "action": "select_algae_level",
-        "level": 2        
-    },
-    "coralstationleft":{
-        "coords": [0, 782, 55, 782, 183, 953, 183, 1050, 0, 1050],
-        "action": "select_coralstation",
-        "side": "left",
-        "apriltag": [ 13, 1]            
-    },
-    "coralstationright":{
-        "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
-        "action": "select_coralstation",
-        "side": "right",
-        "apriltag": [ 12, 2]            
-    },
-    "clearbutton":{
-        "coords": [959, 967, 1440, 967, 1440, 1050, 959, 1050],
-        "action": "clearobjectives"
-    }
-
-}
-
-
-
-
 
 # List to store current objectives
 current_objectives = []
@@ -292,7 +184,7 @@ def is_point_in_polygon(x, y, polygon_coords):
     return inside
 
 def buttonpressed(name):
-    button = clickable_areas.get(name)
+    button = buttons.get(name)
     action = button.get("action")
     team = 1 if redteam else 0
 
@@ -321,7 +213,7 @@ def buttonpressed(name):
         print(f"Update - Set elevator to level {level} and aim for {side} side")
     elif action == "select_algae_level":
         level = button.get("level")
-        print(f"Update command - Set elevator to level {level} and engage algae intake")
+        print(f"Update - Set elevator to level {level} and engage algae intake")
     elif action == "clearobjectives":
         print("Clear objectives")
     
@@ -330,16 +222,19 @@ def buttonpressed(name):
 
 def on_mouse_press(event):
     x, y = event.x, event.y
-    for name, area in clickable_areas.items():
+
+    # Check if mouse pressed a button
+    for name, area in buttons.items():
         if is_point_in_polygon(x, y, area["coords"]):
             # print(f"{name} clicked!")            
             buttonpressed(name)
             return
-
-    """Start drawing the path on left mouse button press."""
-    field_y = event.x / scale_y
-    field_x = (canvas_height - event.y) / scale_x
-    path_drawer.start_drawing((field_x, field_y))
+    # Check if mouse pressed in the arena
+    if is_point_in_polygon(x,y, [56, 150, 842, 150, 842, 950, 56, 950]):
+        """Start drawing the path on left mouse button press."""
+        field_y = event.x / scale_y
+        field_x = (canvas_height - event.y) / scale_x
+        path_drawer.start_drawing((field_x, field_y))
 
 def on_mouse_drag(event):
     """Update the path as the mouse moves."""
@@ -366,7 +261,7 @@ def draw_path(path):
 
 
 # Define clickable areas (e.g. coral, algae, reef segments, levels)
-for name, area in clickable_areas.items():
+for name, area in buttons.items():
     canvas.create_polygon(area["coords"], fill="", outline="blue", tags=(name, "clickable"))
 
 
