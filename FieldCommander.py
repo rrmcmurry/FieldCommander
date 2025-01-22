@@ -1,286 +1,257 @@
-﻿import tkinter as tk
-from tkinter import *
+import tkinter as tk
 from PIL import Image, ImageTk
-import os
-import sys
-import json
-import ntcore
-from PathDrawer import PathDrawer
-from UserInterface import buttons
 
-def redteam():
-    redteam = True
-    setimages()
+class FieldCommander:
 
-def blueteam():
-    redteam = False
-    setimages()
+    def __init__(self):
+        # Initialize App
+        self.root = tk.Tk()
+        self.root.title("Reefscape Field Commander")    
+        self.canvas = tk.Canvas(self.root, width=1439, height=1050)
+        self.canvas.pack()
 
-def setimages():
-    robotimage = "Images/robotred.png" if redteam else "Images/robotblue.png"
-    fieldimage = "Images/field-red.png" if redteam else "Images/field-blue.png"
-    field_base_image = Image.open(fieldimage)
-    field_image = ImageTk.PhotoImage(field_base_image) 
-    canvas.itemconfig(field_image, image=field_image)
+        # Menu
+        self.__init_menu()
 
-os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
-# Initialize NetworkTables
-ntinst = ntcore.NetworkTableInstance.getDefault()
-ntinst.startClient4("FieldCommander")
-ntinst.setServer("localhost")
-ntinst.startDSClient()
-pose_table = ntinst.getTable("Pose")
-objective_table = ntinst.getTable("Objectives")
-FMSInfo_table = ntinst.getTable("FMSInfo")
+        # Team
+        self.redteam = False
 
-# Fetch team color from FMSInfo NetworkTable, default to BlueTeam  
-# (This is untested and needs to be updated when we have driver station handy)
-# Ideally, we can get station number at this point too... to set a starting location
-redteam = FMSInfo_table.getBoolean("redteam",True) 
+        # Background
+        self.background_image = ImageTk.PhotoImage(Image.open("Images/field-blue.png"))
+        self.background_id = self.canvas.create_image(0,0, anchor=tk.NW, image=self.background_image)
 
-robotimage = "Images/robotred.png" if redteam else "Images/robotblue.png"
-fieldimage = "Images/field-red.png" if redteam else "Images/field-blue.png"
+        # Robot
+        self.robot_base_image = Image.open("Images/robotblue.png")
+        self.robot_image = ImageTk.PhotoImage(self.robot_base_image)
+        self.robot_id = self.canvas.create_image(140, 210, image=self.robot_image, anchor=tk.CENTER)
 
+        # Images
+        self.canvas.images= {"background_image": self.background_image, "robot_image": self.robot_image}
 
-# Initialize PathDrawer
-path_drawer = PathDrawer(update_interval=0.1)
+        # Text Areas
+        self.objectives_text = self.canvas.create_text(969, 740, anchor=tk.NW, text="", fill="white", font=("Arial", 10), width=450)
+        self.elevator_text = self.canvas.create_text(969, 840, anchor=tk.NW, text="", fill="white", font=("Arial", 10), width=450)
+        
+        # Buttons
+        self.__init_buttons()
 
-# Tkinter window setup
-root = tk.Tk()
-root.title("Reefscape Field Commander")
+    # Public Functions
+    # ~~~~~~~~~~~~~~~~~
+        
+    def update_robot_position(self):
+        robot=self.robot_base_image
+        self.canvas.coords(self.robot_image, 150, 300)  
+        self.canvas.itemconfig(self.robot_image, image=robot)
+        self.canvas.images["robot_image"] = robot 
+        self.root.after(100, self.update_robot_position)
 
-menubar = Menu(root)
-FileMenu = Menu(menubar, tearoff=0)
-FileMenu.add_command(label="Exit", command=root.quit)
-menubar.add_cascade(label="File", menu=FileMenu)
+    def update_objectives_display(self, objectives_text):    
+        self.canvas.itemconfig(self.objectives_text, text=objectives_text)
 
-TeamColorMenu = Menu(menubar, tearoff=0)
-TeamColorMenu.add_command(label="Red Team", command=redteam)
-TeamColorMenu.add_command(label="Blue Team", command=blueteam)
-menubar.add_cascade(label="Team", menu=TeamColorMenu)
+    def update_elevator_display(self, level_text):    
+        self.canvas.itemconfig(self.elevator_text, text=level_text)
 
-root.config(menu=menubar)
+    def get_redteam(self):
+        return self.redteam
 
-canvas_width = 1439
-canvas_height = 1050
-canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
-canvas.pack()
+    def bind_event(self, event, event_handler):
+        self.canvas.bind(event, event_handler)
 
-# Load field background image
-field_base_image = Image.open(fieldimage)
-field_image = ImageTk.PhotoImage(field_base_image)  
-canvas.create_image(0, 0, anchor=tk.NW, image=field_image)
+    def run(self):
+        self.root.mainloop()
 
-# Add text overlay to list objectives
-# Create a text item for objectives in the lower right corner
-objectives_display = canvas.create_text(
-    canvas_width - 470, canvas_height - 310,  # Adjust position as needed
-    anchor=tk.NW,  # Southeast anchor aligns the text to the bottom-right corner
-    text="No objectives set.", fill="white", font=("Arial", 10), justify=tk.LEFT
-)
-elevator_display = canvas.create_text(
-    canvas_width - 470, canvas_height - 210,  # Adjust position as needed
-    anchor=tk.NW,  # Southeast anchor aligns the text to the bottom-right corner
-    text="No level set.", fill="white", font=("Arial", 10), justify=tk.LEFT
-)
-canvas.itemconfigure(objectives_display, width=450)
-canvas.itemconfigure(elevator_display, width=450)
-
-# Field dimensions (in feet)
-field_width = 26.5  # 786 pixels
-field_height = 29.5 # 800 pixels
-
-# Scaling factors
-scale_x = 800 / field_height  # Scale field height to canvas height
-scale_y = 786 / field_width    # Scale field width to canvas width
-
-# Load robot image
-robot_base_image = Image.open(robotimage)  # Replace with your robot image path
-robot_image = ImageTk.PhotoImage(robot_base_image)
-robot_icon = canvas.create_image(0, canvas_height, image=robot_image, anchor=tk.CENTER)
-
-# Variable to store current orientation (default to 0°)
-current_orientation = 0
-
-# Update position of robot image on canvas
-def update_robot_position():
-    """Periodically update the robot's position and orientation on the canvas."""
-    field_x = pose_table.getNumber('X', 0)  # Field height (x -> canvas y)
-    field_y = pose_table.getNumber('Y', 0)  # Field width (y -> canvas x)
-    z = pose_table.getNumber('Z', current_orientation)  # Orientation (degrees)
-    # print(f"Position: ({field_x},{field_y},{z})")
-
-    # Convert field coordinates to canvas coordinates
-    canvas_x = field_y * scale_y  # Field width -> Canvas width
-    canvas_y = canvas_height - (field_x * scale_x)  # Invert y-axis for canvas
-
-    # Rotate the robot image around its center
-    rotated_image = robot_base_image.rotate(z, expand=True, resample=Image.BICUBIC)
-
-    # Create a Tkinter-compatible image
-    rotated_image_tk = ImageTk.PhotoImage(rotated_image)
-
-    # Center the rotated image on the canvas
-    canvas.coords(robot_icon, canvas_x, canvas_y)  # Move icon to the correct position
-    canvas.itemconfig(robot_icon, image=rotated_image_tk)
-    canvas.image = rotated_image_tk  # Keep a reference to avoid garbage collection
-
-    root.after(100, update_robot_position)
+    def buttonpressed_name(self, event):
+        x,y = event.x, event.y
+        for key, data in self.buttons.items():
+            if self.__is_point_in_polygon(x, y, data["coords"]):
+                return True, key, data
+        return False, None, None
 
 
-# Update objectives list 
-def update_objectives_display(objectives_text):    
-    canvas.itemconfig(objectives_display, text=objectives_text)
+    # Private Functions
+    # ~~~~~~~~~~~~~~~~~
 
-# Update elevator display
-def update_elevator_display(level_text):    
-    canvas.itemconfig(elevator_display, text=level_text)
-
-# Send Navigation Command
-def send_passthrough_command(path):
-    """Send the completed path as a passthrough action."""
-    # Simplify the path to reduce the number of points
-    lastpoint = path[-1]
-    simplified_path = path[::2]  # Sample every 2nd point
- 
-    # If Path is less than five points, just navigate directly
-    if len(path) < 5:
-        objective = [{
-            "action": "navigate",
-            "target": [lastpoint[0], lastpoint[1]],
-            "orientation": current_orientation
-        }]
-    
-    # Otherwise, send a passthrough path
-    else:
-        objective = [{
-            "action": "passthrough",
-            "path": simplified_path
-        },
-        {
-            "action": "navigate",
-            "target": [lastpoint[0], lastpoint[1]],
-            "orientation": current_orientation
-        },
-        {
-            "action": "stop"
-        }]
-    
-    # Convert to JSON and send to NetworkTables
-    objectives_json = json.dumps(objective)
-    objective_table.putString("NewObjectives", objectives_json)
-    objective_table.putBoolean("Overwrite", True)
-    update_objectives_display(f"{objectives_json}")
-    print(f"Sent: {objectives_json}")
-
-
-
-# Check whether a point is within a polygon
-def is_point_in_polygon(x, y, polygon_coords):
-    n = len(polygon_coords) // 2
-    inside = False    
-    p1x, p1y = polygon_coords[0], polygon_coords[1]
-    for i in range(n):
-        p2x, p2y = polygon_coords[2 * (i + 1) % (n*2)], polygon_coords[2 * (i + 1) % (n*2) + 1]
-        if y > min(p1y, p2y):
-            if y <= max(p1y, p2y):
-                if x <= max(p1x, p2x):
-                    if p1y != p2y:
-                        x_inters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                    if p1y == p2y or x <= x_inters:
-                        inside = not inside
-        p1x, p1y, = p2x, p2y
-    return inside
-
-
-# Button actions
-def buttonpressed(name):
-    button = buttons.get(name)
-    action = button.get("action")
-    team = 1 if redteam else 0
-
-    if action == "select_barge":        
-        apriltagID = button.get("apriltag")[team]
-        update_objectives_display(f"Navigate to Barge\nAprilTag: {apriltagID}")      
-        update_elevator_display("Set elevator to Endgame level")     
-    elif action == "select_processor": 
-        apriltagID = button.get("apriltag")[team]
-        update_objectives_display(f"Navigate to Processor\nAprilTag: {apriltagID}") 
-        update_elevator_display("Set elevator to Processor level")          
-    elif action == "select_coralstation":
-        side = button.get("side")        
-        apriltagID = button.get("apriltag")[team]
-        update_objectives_display(f"Navigate to {side} side Coral Station\nAprilTag: {apriltagID}")   
-        update_elevator_display("Set elevator to Coral Station level")
-    elif action == "select_reef":               
-        apriltagID = button.get("apriltag")[team]
-        update_objectives_display(f"Navigate to {name}\nAprilTag: {apriltagID}")   
-    elif action == "select_coral_level":
-        level = button.get("level")
-        side = button.get("side")
-        if level > 1:
-            update_elevator_display(f"Set elevator to level {level} and aim for {side} side")
-        else:
-            update_elevator_display(f"Set elevator to level {level}")
-    elif action == "select_algae_level":
-        level = button.get("level")
-        update_elevator_display(f"Set elevator to level {level} and engage algae intake")
-    elif action == "clearobjectives":
-        update_objectives_display("")
-        update_elevator_display("")
-    
-
-def on_mouse_press(event):
-    x, y = event.x, event.y
-
-    # Check if mouse pressed a button
-    for name, area in buttons.items():
-        if is_point_in_polygon(x, y, area["coords"]):
-            # print(f"{name} clicked!")            
-            buttonpressed(name)
-            return
-    # Check if mouse pressed in the arena
-    if is_point_in_polygon(x,y, [56, 150, 842, 150, 842, 950, 56, 950]):
-        """Start drawing the path on left mouse button press."""
-        field_y = event.x / scale_y
-        field_x = (canvas_height - event.y) / scale_x
-        path_drawer.start_drawing((field_x, field_y))
-
-def on_mouse_drag(event):
-    """Update the path as the mouse moves."""
-    field_y = event.x / scale_y
-    field_x = (canvas_height - event.y) / scale_x
-    path_drawer.update_path((field_x, field_y))
-    draw_path(path_drawer.path)  # Visualize the path
-
-def on_mouse_release(event):
-    """Send the completed path as a passthrough action."""
-    completed_path = path_drawer.stop_drawing()
-    if completed_path:
-        send_passthrough_command(completed_path)
-        canvas.delete("path")  # Clear the drawn path
-
-def draw_path(path):
-    """Draw the path on the canvas."""
-    canvas.delete("path")  # Remove old path
-    for i in range(len(path) - 1):
-        x1, y1 = path[i][1] * scale_y, canvas_height - (path[i][0] * scale_x)
-        x2, y2 = path[i + 1][1] * scale_y, canvas_height - (path[i + 1][0] * scale_x)
-        canvas.create_line(x1, y1, x2, y2, fill="blue", width=2, tags="path")
+    def __init_buttons(self):
+        self.buttons =  {
+            "barge":{
+                "coords": [0, 0, 959, 0, 959, 176, 0, 176],
+                "action": "select_barge",
+                "apriltag": [ 14, 5],
+                "orientation": 0,
+                "level": 0
+            },
+            "processor":{
+                "coords": [829, 177, 959, 177, 959, 400, 829, 400],
+                "action": "select_processor",
+                "apriltag": [ 16, 3],
+                "orientation": 90,
+                "level": 0
+            },
+            "reef2oclock":{
+                "coords": [449, 508, 515, 398, 578, 508],
+                "action": "select_reef",
+                "apriltag": [ 22, 9],
+                "orientation": 240
+            },
+            "reef4oclock":{
+                "coords": [449, 508, 578, 508, 515, 623],
+                "action": "select_reef",
+                "apriltag": [ 17, 8],
+                "orientation": 300            
+            },
+            "reef6oclock":{
+                "coords": [449, 508, 515, 623, 383, 623],
+                "action": "select_reef",
+                "apriltag": [ 18, 7],
+                "orientation": 0            
+            },    
+            "reef8oclock":{
+                "coords": [449, 508, 383, 623, 318, 508],
+                "action": "select_reef",
+                "apriltag": [ 19, 6],
+                "orientation": 60            
+            },
+            "reef10oclock":{
+                "coords": [449, 508, 318, 508, 382, 398],
+                "action": "select_reef",
+                "apriltag": [ 20, 11],
+                "orientation": 120            
+            },
+            "reef12oclock":{
+                "coords": [449, 508, 382, 398, 515, 398],
+                "action": "select_reef",
+                "apriltag": [ 21, 10],
+                "orientation": 180            
+            },
+            "corallevel4left":{
+                "coords": [959, 0, 1193, 0, 1193, 234, 959, 234],
+                "action": "select_coral_level",
+                "level": 4,
+                "side": "left"
+            },
+            "corallevel4right":{
+                "coords": [1193, 0, 1440, 0, 1440, 234, 1193, 234],
+                "action": "select_coral_level",
+                "level": 4,
+                "side": "right"
+            },
+            "corallevel3left":{
+                "coords": [959, 234, 1132, 234, 1132, 460, 959, 460],
+                "action": "select_coral_level",
+                "level": 3,
+                "side": "left"
+            },
+            "corallevel3right":{
+                "coords": [1260, 234, 1440, 234, 1440, 460, 1260, 460],
+                "action": "select_coral_level",
+                "level": 3,
+                "side": "right"
+            },
+            "corallevel2left":{
+                "coords": [959, 460, 1132, 460, 1132, 622, 959, 622],
+                "action": "select_coral_level",
+                "level": 2,
+                "side": "left"
+            },
+            "corallevel2right":{
+                "coords": [1260, 460, 1440, 460, 1440, 622, 1260, 622],
+                "action": "select_coral_level",
+                "level": 2,
+                "side": "right"
+            },
+            "corallevel1":{
+                "coords": [959, 622, 1440, 622, 1440, 720, 959, 720],
+                "action": "select_coral_level",
+                "level": 1,
+                "side": "left"
+            },
+            "algaelevel3":{
+                "coords": [1132, 234, 1260, 234, 1260, 414, 1132, 414],
+                "action": "select_algae_level",
+                "level": 3        
+            },
+            "algaelevel2":{
+                "coords": [1132, 414, 1260, 414, 1260, 622, 1132, 622],
+                "action": "select_algae_level",
+                "level": 2        
+            },
+            "coralstationleft":{
+                "coords": [0, 782, 55, 782, 183, 953, 183, 1050, 0, 1050],
+                "action": "select_coralstation",
+                "side": "left",
+                "apriltag": [ 13, 1],
+                "orientation": 240            
+            },
+            "coralstationright":{
+                "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
+                "action": "select_coralstation",
+                "side": "right",
+                "apriltag": [ 12, 2],
+                "orientation": 120            
+            },
+            "clearbutton":{
+                "coords": [959, 967, 1440, 967, 1440, 1050, 959, 1050],
+                "action": "clearobjectives"
+            }
+        }
+        
+        for name, area in self.buttons.items():
+            self.canvas.create_polygon(area["coords"], fill="", outline="blue", tags=(name, "clickable"))
 
 
+    def __init_menu(self):
+        # Menu
+        menubar = tk.Menu(self.root)
 
-# Define clickable areas (e.g. coral, algae, reef segments, levels)
-for name, area in buttons.items():
-    canvas.create_polygon(area["coords"], fill="", outline="blue", tags=(name, "clickable"))
+        # File Menu
+        FileMenu = tk.Menu(menubar, tearoff=0)
+        FileMenu.add_command(label="Exit", underline=1, command=self.root.quit)
+        menubar.add_cascade(label="File", underline=0, menu=FileMenu)
+
+        # Team Menu
+        TeamColorMenu = tk.Menu(menubar, tearoff=0)
+        TeamColorMenu.add_command(label="Red Team", underline=0, command=self.__set_red_team)
+        TeamColorMenu.add_command(label="Blue Team", underline=0, command=self.__set_blue_team)
+        menubar.add_cascade(label="Team", underline=0, menu=TeamColorMenu)
+
+        # Start From Menu
+        StartingPositionMenu = tk.Menu(menubar, tearoff=0)
+        StartingPositionMenu.add_command(label="1", underline=0, command=lambda: self.__startfrom(1))
+        StartingPositionMenu.add_command(label="2", underline=0, command=lambda: self.__startfrom(2))
+        StartingPositionMenu.add_command(label="3", underline=0, command=lambda: self.__startfrom(3))
+        menubar.add_cascade(label="Start From", underline=0, menu=StartingPositionMenu)
+
+        self.root.config(menu=menubar)
+
+    def __set_blue_team(self):        
+        self.__set_red_team(False)
+
+    def __set_red_team(self, redteam=True):
+        self.redteam = redteam
+        fieldimage="Images/field-red.png" if redteam else "Images/field-blue.png"
+        robotimagefile = "Images/robotred.png" if redteam else "Images/robotblue.png"
+        self.robot_base_image = Image.open(robotimagefile)
+        self.robot_image = ImageTk.PhotoImage(self.robot_base_image)
+        self.background_image = ImageTk.PhotoImage(Image.open(fieldimage))
+        self.canvas.itemconfig(self.robot_id, image=self.robot_image)
+        self.canvas.itemconfig(self.background_id, image=self.background_image)
+        
+    def __startfrom(self, level):
+        print(f"Need to set the starting position to {level}")
 
 
-# Bind mouse clicks to set navigation objectives
-canvas.bind("<Button-1>", on_mouse_press)  # Start drawing
-canvas.bind("<B1-Motion>", on_mouse_drag)  # Continue drawing
-canvas.bind("<ButtonRelease-1>", on_mouse_release)  # Finalize and send
-
-
-# Start tracking robot position
-update_robot_position()
-root.mainloop()
+    def __is_point_in_polygon(self, x, y, polygon_coords):
+        n = len(polygon_coords) // 2
+        inside = False    
+        p1x, p1y = polygon_coords[0], polygon_coords[1]
+        for i in range(n):
+            p2x, p2y = polygon_coords[2 * (i + 1) % (n*2)], polygon_coords[2 * (i + 1) % (n*2) + 1]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            x_inters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1y == p2y or x <= x_inters:
+                            inside = not inside
+            p1x, p1y, = p2x, p2y
+        return inside     

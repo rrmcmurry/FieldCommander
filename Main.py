@@ -1,31 +1,52 @@
-import tkinter as tk
-from PIL import Image, ImageTk
+from FieldCommander import FieldCommander
+
+def on_button_press(buttonname, data, ui):
+    action = data["action"]
+
+    match action:
+        case "select_barge":
+            level = data["level"]
+            ui.update_objectives_display("Barge")
+            ui.update_elevator_display(f"Barge level {level}")
+        case "select_processor":
+            level = data["level"]
+            ui.update_elevator_display(f"Processor level {level}")            
+            ui.update_objectives_display("Processor")
+        case "select_reef":                                    
+            ui.update_objectives_display(f"{buttonname}")
+        case "select_coral_level":
+            level = data["level"]
+            side = data["side"]
+            if level > 1:
+                ui.update_elevator_display(f"Coral level {level}, {side} side")
+            else:
+                ui.update_elevator_display(f"Coral level {level}")
+        case "select_algae_level":
+            level = data["level"]
+            ui.update_elevator_display(f"Algae level {level}")
+        case "select_coralstation":
+            side = data["side"]
+            ui.update_objectives_display(f"{side} coral station")
+        case "clearobjectives":
+            ui.update_objectives_display("")
+        case _:
+            ui.update_objectives_display("ERROR")
+    
+def on_mouse_press(event, ui):
+    buttonpressed, buttonname, data = ui.buttonpressed_name(event)
+    if buttonpressed:
+        on_button_press(buttonname, data, ui)
+    else:
+        ui.update_objectives_display("No button pressed")
+        ui.update_elevator_display("")
 
 
-redteam=False
-
-root = tk.Tk()
-root.title("Reefscape Field Commander")
-canvas = tk.Canvas(root, width=1439, height=1050)
-canvas.pack()
-fieldimage = "Images/field-red.png" if redteam else "Images/field-blue.png"
-background = ImageTk.PhotoImage(Image.open(fieldimage))
-background_id = canvas.create_image(0,0, anchor=tk.NW, image=background)
-objectives_text = canvas.create_text(969, 740, anchor=tk.NW, text="test", fill="white", font=("Arial", 10), width=450)
-elevator_text = canvas.create_text(969, 840, anchor=tk.NW, text="test", fill="white", font=("Arial", 10), width=450)
-
-def on_mouse_press(event):
-    global redteam
-    redteam = not(redteam)
-    fieldimage="Images/field-red.png" if redteam else "Images/field-blue.png"    
-    background = ImageTk.PhotoImage(Image.open(fieldimage))
-    canvas.itemconfig(background_id, image=background)
-    canvas.image = background
+def main():
+    ui = FieldCommander()
+    ui.bind_event("<Button-1>", lambda event: on_mouse_press(event, ui))
+    ui.update_robot_position()
+    ui.run()
 
 
-canvas.bind("<Button-1>", on_mouse_press)
-
-root.mainloop()
-
-
-
+if __name__ == "__main__":
+    main()
