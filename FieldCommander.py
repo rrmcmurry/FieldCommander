@@ -179,6 +179,7 @@ class FieldCommander:
                 "coords": [0, 782, 55, 782, 183, 953, 183, 1050, 0, 1050],
                 "action": "select_coralstation",
                 "side": "left",
+                "level": 1,
                 "apriltag": [ 13, 1],
                 "orientation": 240            
             },
@@ -186,6 +187,7 @@ class FieldCommander:
                 "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
                 "action": "select_coralstation",
                 "side": "right",
+                "level": 1,
                 "apriltag": [ 12, 2],
                 "orientation": 120            
             },

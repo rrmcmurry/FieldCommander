@@ -26,7 +26,9 @@ def on_button_press(buttonname, data, ui):
             ui.update_elevator_display(f"Algae level {level}")
         case "select_coralstation":
             side = data["side"]
+            level = data["level"]            
             ui.update_objectives_display(f"{side} coral station")
+            ui.update_elevator_display(f"Supply level {level}")   
         case "clearobjectives":
             ui.update_objectives_display("")
         case _:
