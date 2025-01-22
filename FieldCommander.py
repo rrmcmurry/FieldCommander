@@ -1,4 +1,5 @@
 ﻿import tkinter as tk
+from tkinter import *
 from PIL import Image, ImageTk
 import os
 import sys
@@ -6,6 +7,21 @@ import json
 import ntcore
 from PathDrawer import PathDrawer
 from UserInterface import buttons
+
+def redteam():
+    redteam = True
+    setimages()
+
+def blueteam():
+    redteam = False
+    setimages()
+
+def setimages():
+    robotimage = "Images/robotred.png" if redteam else "Images/robotblue.png"
+    fieldimage = "Images/field-red.png" if redteam else "Images/field-blue.png"
+    field_base_image = Image.open(fieldimage)
+    field_image = ImageTk.PhotoImage(field_base_image) 
+    canvas.itemconfig(field_image, image=field_image)
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 # Initialize NetworkTables
@@ -20,10 +36,11 @@ FMSInfo_table = ntinst.getTable("FMSInfo")
 # Fetch team color from FMSInfo NetworkTable, default to BlueTeam  
 # (This is untested and needs to be updated when we have driver station handy)
 # Ideally, we can get station number at this point too... to set a starting location
-redteam = FMSInfo_table.getBoolean("redteam",False) 
+redteam = FMSInfo_table.getBoolean("redteam",True) 
 
 robotimage = "Images/robotred.png" if redteam else "Images/robotblue.png"
 fieldimage = "Images/field-red.png" if redteam else "Images/field-blue.png"
+
 
 # Initialize PathDrawer
 path_drawer = PathDrawer(update_interval=0.1)
@@ -31,6 +48,19 @@ path_drawer = PathDrawer(update_interval=0.1)
 # Tkinter window setup
 root = tk.Tk()
 root.title("Reefscape Field Commander")
+
+menubar = Menu(root)
+FileMenu = Menu(menubar, tearoff=0)
+FileMenu.add_command(label="Exit", command=root.quit)
+menubar.add_cascade(label="File", menu=FileMenu)
+
+TeamColorMenu = Menu(menubar, tearoff=0)
+TeamColorMenu.add_command(label="Red Team", command=redteam)
+TeamColorMenu.add_command(label="Blue Team", command=blueteam)
+menubar.add_cascade(label="Team", menu=TeamColorMenu)
+
+root.config(menu=menubar)
+
 canvas_width = 1439
 canvas_height = 1050
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
