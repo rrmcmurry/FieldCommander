@@ -78,50 +78,58 @@ class FieldCommander:
                 "action": "select_barge",
                 "apriltag": [ 14, 5],
                 "orientation": 0,
-                "level": 0
+                "level": 0,
+                "location": (0, 5)
             },
             "processor":{
                 "coords": [829, 177, 959, 177, 959, 400, 829, 400],
                 "action": "select_processor",
                 "apriltag": [ 16, 3],
                 "orientation": 90,
-                "level": 0
+                "level": 0,
+                "location": (3, 10)
             },
             "reef2oclock":{
                 "coords": [449, 508, 515, 398, 578, 508],
                 "action": "select_reef",
                 "apriltag": [ 22, 9],
-                "orientation": 240
+                "orientation": 240,
+                "location": (7, 5)
             },
             "reef4oclock":{
                 "coords": [449, 508, 578, 508, 515, 623],
                 "action": "select_reef",
                 "apriltag": [ 17, 8],
-                "orientation": 300            
+                "orientation": 300,
+                "location": (7, 5)
             },
             "reef6oclock":{
                 "coords": [449, 508, 515, 623, 383, 623],
                 "action": "select_reef",
                 "apriltag": [ 18, 7],
-                "orientation": 0            
+                "orientation": 0,
+                "location": (7, 5)            
             },    
             "reef8oclock":{
                 "coords": [449, 508, 383, 623, 318, 508],
                 "action": "select_reef",
                 "apriltag": [ 19, 6],
-                "orientation": 60            
+                "orientation": 60,
+                "location": (7, 5)            
             },
             "reef10oclock":{
                 "coords": [449, 508, 318, 508, 382, 398],
                 "action": "select_reef",
                 "apriltag": [ 20, 11],
-                "orientation": 120            
+                "orientation": 120,
+                "location": (7, 5)            
             },
             "reef12oclock":{
                 "coords": [449, 508, 382, 398, 515, 398],
                 "action": "select_reef",
                 "apriltag": [ 21, 10],
-                "orientation": 180            
+                "orientation": 180,
+                "location": (7, 5)            
             },
             "corallevel4left":{
                 "coords": [959, 0, 1193, 0, 1193, 234, 959, 234],
@@ -139,7 +147,7 @@ class FieldCommander:
                 "coords": [959, 234, 1132, 234, 1132, 460, 959, 460],
                 "action": "select_coral_level",
                 "level": 3,
-                "side": "left"
+                "side": "left",
             },
             "corallevel3right":{
                 "coords": [1260, 234, 1440, 234, 1440, 460, 1260, 460],
@@ -181,7 +189,8 @@ class FieldCommander:
                 "side": "left",
                 "level": 1,
                 "apriltag": [ 13, 1],
-                "orientation": 240            
+                "orientation": 240,
+                "location": (7, 5)                
             },
             "coralstationright":{
                 "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
@@ -189,7 +198,8 @@ class FieldCommander:
                 "side": "right",
                 "level": 1,
                 "apriltag": [ 12, 2],
-                "orientation": 120            
+                "orientation": 120,
+                "location": (7, 5)           
             },
             "clearbutton":{
                 "coords": [959, 967, 1440, 967, 1440, 1050, 959, 1050],
