@@ -1,29 +1,9 @@
-import subprocess
-import os
-
 from FieldCommander import FieldCommander
 
 
 def on_button_press(buttonname, data, ui):
     action = data["action"]
-
-
     tag = 1 if ui.redteam else 0
-    om.set_current_objective(data, tag)
-
-
-    match action:
-        case "select_barge":
-            level = data["level"]
-            ui.update_objectives_display("Barge")
-            ui.update_elevator_display(f"Barge level {level}")
-        case "select_processor":
-            level = data["level"]
-            ui.update_elevator_display(f"Processor level {level}")            
-            ui.update_objectives_display("Processor")
-        case "select_reef":                                    
-            ui.update_objectives_display(f"{buttonname}")
-
     team = 0 if ui.redteam else 1
 
     match action:
@@ -102,8 +82,6 @@ def main():
     ui = FieldCommander()
     ui.bind_event("<Button-1>", lambda event: on_mouse_press(event, ui))
     ui.update_robot_position()
-    path = os.path.abspath("src/WestPi.py")
-    autonomousdriver = subprocess.Popen(["python", path])
     ui.run()
 
 if __name__ == "__main__":
