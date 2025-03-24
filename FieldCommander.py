@@ -78,122 +78,74 @@ class FieldCommander:
                 "action": "select_barge",
                 "apriltag": [ 14, 5],
                 "orientation": 0,
-<<<<<<< HEAD:src/FieldCommander.py
                 "level": 0,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (29, 4)
-=======
-                "level": 0
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (29, 4),
+                "level": 0,
                 "location": (0, 5)
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "processor":{
                 "coords": [829, 177, 959, 177, 959, 400, 829, 400],
                 "action": "select_processor",
                 "apriltag": [ 16, 3],
                 "orientation": 90,
-<<<<<<< HEAD:src/FieldCommander.py
                 "level": 0,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (23, 25)
-=======
-                "level": 0
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (23, 25),
+                "level": 0,
                 "location": (3, 10)
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef2oclock":{
                 "coords": [449, 508, 515, 398, 578, 508],
                 "action": "select_reef",
                 "apriltag": [ 22, 9],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 240,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (20.2, 19.5)
-=======
-                "orientation": 240
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (20.2, 19.5),
+                "orientation": 240,
                 "location": (7, 5)
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef4oclock":{
                 "coords": [449, 508, 578, 508, 515, 623],
                 "action": "select_reef",
                 "apriltag": [ 17, 8],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 300,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (13, 19.5)
-=======
-                "orientation": 300            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (13, 19.5),
+                "orientation": 300,          
                 "location": (7, 5)
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef6oclock":{
                 "coords": [449, 508, 515, 623, 383, 623],
                 "action": "select_reef",
                 "apriltag": [ 18, 7],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 0,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (10, 13)
-=======
-                "orientation": 0            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (10, 13),
+                "orientation": 0,            
                 "location": (7, 5)            
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },    
             "reef8oclock":{
                 "coords": [449, 508, 383, 623, 318, 508],
                 "action": "select_reef",
                 "apriltag": [ 19, 6],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 60,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (13, 9)            
-=======
-                "orientation": 60            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (13, 9),            
+                "orientation": 60,            
                 "location": (7, 5)            
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef10oclock":{
                 "coords": [449, 508, 318, 508, 382, 398],
                 "action": "select_reef",
                 "apriltag": [ 20, 11],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 120,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (20.2, 9)            
-=======
-                "orientation": 120            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (20.2, 9),            
+                "orientation": 120,            
                 "location": (7, 5)            
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef12oclock":{
                 "coords": [449, 508, 382, 398, 515, 398],
                 "action": "select_reef",
                 "apriltag": [ 21, 10],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 180,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (23, 13)            
-=======
-                "orientation": 180            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (23, 13),            
+                "orientation": 180,            
                 "location": (7, 5)            
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "corallevel4left":{
                 "coords": [959, 0, 1193, 0, 1193, 234, 959, 234],
@@ -253,16 +205,10 @@ class FieldCommander:
                 "side": "left",
                 "level": 1,
                 "apriltag": [ 13, 1],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 240,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (5, 4)                
-=======
-                "orientation": 240            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (5, 4),                
+                "orientation": 240,            
                 "location": (7, 5)                
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "coralstationright":{
                 "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
@@ -270,16 +216,10 @@ class FieldCommander:
                 "side": "right",
                 "level": 1,
                 "apriltag": [ 12, 2],
-<<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 120,
-<<<<<<< HEAD:src/FieldCommander.py
-                "location": (5, 22.5)           
-=======
-                "orientation": 120            
->>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
-=======
+                "location": (5, 22.5),           
+                "orientation": 120,            
                 "location": (7, 5)           
->>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "clearbutton":{
                 "coords": [959, 967, 1440, 967, 1440, 1050, 959, 1050],
