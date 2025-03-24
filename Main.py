@@ -9,10 +9,10 @@ from src import (
 
 def on_button_press(buttonname, data, ui, om):
     action = data["action"]
-<<<<<<< HEAD
+
     tag = 1 if ui.redteam else 0
     om.set_current_objective(data, tag)
-=======
+
 
     match action:
         case "select_barge":
@@ -44,7 +44,7 @@ def on_button_press(buttonname, data, ui, om):
             ui.update_objectives_display("")
         case _:
             ui.update_objectives_display("ERROR")
->>>>>>> parent of 80239ef (Adding Objective Info)
+
     
     
     
