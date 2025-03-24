@@ -9,8 +9,42 @@ from src import (
 
 def on_button_press(buttonname, data, ui, om):
     action = data["action"]
+<<<<<<< HEAD
     tag = 1 if ui.redteam else 0
     om.set_current_objective(data, tag)
+=======
+
+    match action:
+        case "select_barge":
+            level = data["level"]
+            ui.update_objectives_display("Barge")
+            ui.update_elevator_display(f"Barge level {level}")
+        case "select_processor":
+            level = data["level"]
+            ui.update_elevator_display(f"Processor level {level}")            
+            ui.update_objectives_display("Processor")
+        case "select_reef":                                    
+            ui.update_objectives_display(f"{buttonname}")
+        case "select_coral_level":
+            level = data["level"]
+            side = data["side"]
+            if level > 1:
+                ui.update_elevator_display(f"Coral level {level}, {side} side")
+            else:
+                ui.update_elevator_display(f"Coral level {level}")
+        case "select_algae_level":
+            level = data["level"]
+            ui.update_elevator_display(f"Algae level {level}")
+        case "select_coralstation":
+            side = data["side"]
+            level = data["level"]            
+            ui.update_objectives_display(f"{side} coral station")
+            ui.update_elevator_display(f"Supply level {level}")   
+        case "clearobjectives":
+            ui.update_objectives_display("")
+        case _:
+            ui.update_objectives_display("ERROR")
+>>>>>>> parent of 80239ef (Adding Objective Info)
     
     
     
