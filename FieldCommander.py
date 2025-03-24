@@ -1,6 +1,5 @@
 import tkinter as tk
 from PIL import Image, ImageTk
-import ntcore
 
 class FieldCommander:
 
@@ -32,13 +31,6 @@ class FieldCommander:
         # Text Areas
         self.objectives_text = self.canvas.create_text(969, 740, anchor=tk.NW, text="", fill="white", font=("Arial", 10), width=450)
         self.elevator_text = self.canvas.create_text(969, 840, anchor=tk.NW, text="", fill="white", font=("Arial", 10), width=450)
-
-        # Initialize NetworkTables
-        self.ntinst = ntcore.NetworkTableInstance.getDefault()
-        self.ntinst.startClient4("FieldCommander")
-        self.ntinst.setServer("localhost")
-        self.ntinst.startDSClient()
-        self.pose_table = self.ntinst.getTable("Pose")
         
         # Buttons
         self.__init_buttons()
@@ -47,26 +39,10 @@ class FieldCommander:
     # ~~~~~~~~~~~~~~~~~
         
     def update_robot_position(self):
-        # Get current pose from Pose Table
-        x = self.pose_table.getNumber('X', 0)
-        y = self.pose_table.getNumber('Y', 0)
-        z = self.pose_table.getNumber('Z',0)
-
-        # Convert from field to canvas coordinates
-        canvas_x = y * 786/26.5 + 54.5 # Width of field image vs width of field in feet
-        canvas_y = (800 - x * 800/29.5) + 150 # Height of field image vs height of field in feet, axis inverted
-
-        # Move image to coordinates
-        self.canvas.coords(self.robot_id, canvas_x, canvas_y)
-
-        # Rotate image to match robot rotation
         robot=self.robot_base_image
-        rotated_image = robot.rotate(360-z, expand=True, resample=Image.BICUBIC)
-        rotated_image_tk = ImageTk.PhotoImage(rotated_image)
-        self.canvas.itemconfig(self.robot_id, image=rotated_image_tk)
-        self.canvas.image = rotated_image_tk        
-
-        # Set to run again in 100 ms        
+        self.canvas.coords(self.robot_image, 150, 300)  
+        self.canvas.itemconfig(self.robot_image, image=robot)
+        self.canvas.images["robot_image"] = robot 
         self.root.after(100, self.update_robot_position)
 
     def update_objectives_display(self, objectives_text):    
@@ -104,10 +80,14 @@ class FieldCommander:
                 "orientation": 0,
 <<<<<<< HEAD:src/FieldCommander.py
                 "level": 0,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (29, 4)
 =======
                 "level": 0
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (0, 5)
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "processor":{
                 "coords": [829, 177, 959, 177, 959, 400, 829, 400],
@@ -116,10 +96,14 @@ class FieldCommander:
                 "orientation": 90,
 <<<<<<< HEAD:src/FieldCommander.py
                 "level": 0,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (23, 25)
 =======
                 "level": 0
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (3, 10)
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef2oclock":{
                 "coords": [449, 508, 515, 398, 578, 508],
@@ -127,10 +111,14 @@ class FieldCommander:
                 "apriltag": [ 22, 9],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 240,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (20.2, 19.5)
 =======
                 "orientation": 240
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef4oclock":{
                 "coords": [449, 508, 578, 508, 515, 623],
@@ -138,10 +126,14 @@ class FieldCommander:
                 "apriltag": [ 17, 8],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 300,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (13, 19.5)
 =======
                 "orientation": 300            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef6oclock":{
                 "coords": [449, 508, 515, 623, 383, 623],
@@ -149,10 +141,14 @@ class FieldCommander:
                 "apriltag": [ 18, 7],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 0,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (10, 13)
 =======
                 "orientation": 0            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)            
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },    
             "reef8oclock":{
                 "coords": [449, 508, 383, 623, 318, 508],
@@ -160,10 +156,14 @@ class FieldCommander:
                 "apriltag": [ 19, 6],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 60,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (13, 9)            
 =======
                 "orientation": 60            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)            
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef10oclock":{
                 "coords": [449, 508, 318, 508, 382, 398],
@@ -171,10 +171,14 @@ class FieldCommander:
                 "apriltag": [ 20, 11],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 120,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (20.2, 9)            
 =======
                 "orientation": 120            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)            
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "reef12oclock":{
                 "coords": [449, 508, 382, 398, 515, 398],
@@ -182,10 +186,14 @@ class FieldCommander:
                 "apriltag": [ 21, 10],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 180,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (23, 13)            
 =======
                 "orientation": 180            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)            
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "corallevel4left":{
                 "coords": [959, 0, 1193, 0, 1193, 234, 959, 234],
@@ -247,10 +255,14 @@ class FieldCommander:
                 "apriltag": [ 13, 1],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 240,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (5, 4)                
 =======
                 "orientation": 240            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)                
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "coralstationright":{
                 "coords": [719, 1050, 719, 953, 838, 782, 959, 782, 959, 1050],
@@ -260,10 +272,14 @@ class FieldCommander:
                 "apriltag": [ 12, 2],
 <<<<<<< HEAD:src/FieldCommander.py
                 "orientation": 120,
+<<<<<<< HEAD:src/FieldCommander.py
                 "location": (5, 22.5)           
 =======
                 "orientation": 120            
 >>>>>>> parent of 80239ef (Adding Objective Info):FieldCommander.py
+=======
+                "location": (7, 5)           
+>>>>>>> parent of d2d92e4 (Rewriting FieldCommander):FieldCommander.py
             },
             "clearbutton":{
                 "coords": [959, 967, 1440, 967, 1440, 1050, 959, 1050],
